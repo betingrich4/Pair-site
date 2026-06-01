@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Offline Hub | Auto-Restore & Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Offline Core | Auto-Restore + Game</title>
     <style>
         * {
             margin: 0;
@@ -14,607 +15,597 @@
 
         body {
             min-height: 100vh;
-            background: radial-gradient(circle at 30% 20%, #0B1120, #030614);
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0B1120;
+            background-image: radial-gradient(circle at 30% 20%, #111827, #030712);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 20px;
         }
 
-        /* Main card */
-        .offline-panel {
-            max-width: 640px;
+        .offline-hub {
+            max-width: 680px;
             width: 100%;
-            background: rgba(10, 18, 30, 0.75);
-            backdrop-filter: blur(16px);
-            border-radius: 56px;
-            padding: 28px 24px 40px;
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.08);
-            border: 1px solid rgba(56, 189, 248, 0.35);
+            background: rgba(8, 14, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 64px;
+            padding: 28px 24px 42px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.3);
             transition: all 0.2s ease;
             text-align: center;
         }
 
-        /* Ring loader container */
-        .ring-loader {
+        /* offline illustration - faithful to "no internet" JSON style */
+        .offline-art {
             position: relative;
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 24px;
+            width: 200px;
+            height: 170px;
+            margin: 0 auto 16px;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
         }
-        canvas.ring-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .offline-svg {
             width: 100%;
-            height: 100%;
-            pointer-events: none;
+            height: auto;
+            filter: drop-shadow(0 8px 18px rgba(0,0,0,0.5));
         }
 
-        .status-chip {
+        .status-pill {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.55);
-            padding: 8px 22px;
-            border-radius: 60px;
-            margin-bottom: 18px;
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 24px;
+            border-radius: 100px;
+            margin-bottom: 22px;
+            backdrop-filter: blur(5px);
             font-weight: 500;
         }
-        .status-led {
+        .led {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             background: #f97316;
-            box-shadow: 0 0 8px #f97316;
+            box-shadow: 0 0 10px #f97316;
             transition: all 0.2s;
         }
-        .status-led.online {
+        .led.success {
             background: #10b981;
-            box-shadow: 0 0 14px #10b981;
+            box-shadow: 0 0 16px #10b981;
         }
-        .status-text {
-            color: #e2e8f0;
+        .status-label {
+            color: #e2edff;
             font-size: 0.85rem;
             letter-spacing: 0.3px;
-            font-weight: 500;
         }
 
         h2 {
-            font-size: 2rem;
+            font-size: 1.9rem;
             font-weight: 700;
-            background: linear-gradient(120deg, #FFFFFF, #94a3f8);
+            background: linear-gradient(125deg, #ffffff, #93c5fd);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 10px;
         }
-        .sub-desc {
+        .sub {
             color: #8ba3cf;
             font-size: 0.9rem;
             margin-bottom: 28px;
             padding: 0 6px;
         }
 
+        /* success animation zone */
         .success-stage {
             display: flex;
             justify-content: center;
-            margin: 10px 0 18px;
-            min-height: 85px;
+            margin: 5px 0 18px;
+            min-height: 100px;
         }
-        .check-svg {
-            width: 80px;
-            height: 80px;
+        .success-svg {
+            width: 100px;
+            height: 100px;
             filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.4));
         }
-        .hidden {
-            display: none;
-        }
 
-        button.retry-button {
-            background: linear-gradient(105deg, #1e293b, #0f172a);
+        .retry-button {
+            background: linear-gradient(100deg, #1e293b, #0f172a);
             border: none;
             padding: 12px 28px;
             font-size: 0.95rem;
             font-weight: 600;
-            border-radius: 44px;
+            border-radius: 50px;
             color: #f1f5f9;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
-            margin-top: 8px;
-            width: 75%;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+            margin-top: 6px;
+            width: 80%;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(56, 189, 248, 0.5);
-            letter-spacing: 0.5px;
         }
-        button.retry-button:active {
+        .retry-button:active {
             transform: scale(0.97);
-            background: linear-gradient(105deg, #2d3a54, #1a253f);
+            background: linear-gradient(100deg, #2d3a54, #1a253f);
         }
 
-        /* Game section - NO EMOJIS, only shapes / icons */
+        /* game section - no emojis, pure shape symbols */
         .game-divider {
-            margin-top: 36px;
-            padding-top: 20px;
+            margin-top: 38px;
+            padding-top: 24px;
             border-top: 1px solid rgba(71, 145, 255, 0.3);
         }
         .game-header {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 1.2rem;
             font-weight: 600;
-            color: #b9d0ff;
-            margin-bottom: 16px;
+            color: #bfd6ff;
+            margin-bottom: 20px;
         }
         .game-header span {
-            background: #0f172f;
-            padding: 6px 14px;
+            background: #0f172fcc;
+            padding: 6px 20px;
             border-radius: 60px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            backdrop-filter: blur(4px);
         }
+
         .memory-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 14px;
             justify-items: center;
             align-items: center;
-            margin: 20px 0 18px;
+            margin: 16px 0 18px;
         }
-        .memory-card {
-            background: linear-gradient(145deg, #0e1a2a, #061020);
+
+        .card {
+            background: radial-gradient(ellipse at 30% 35%, #111c2e, #071222);
             width: 100%;
             aspect-ratio: 1 / 1;
             border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.9rem;
+            font-size: 2rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 10px 16px -5px rgba(0,0,0,0.5);
-            border: 1px solid rgba(96, 165, 250, 0.5);
+            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(96, 165, 250, 0.45);
             color: #facc15;
+            font-family: monospace;
         }
-        .memory-card.flipped, .memory-card.matched {
-            background: linear-gradient(145deg, #1f3e61, #11263e);
+        .card.flipped, .card.matched {
+            background: linear-gradient(145deg, #1f4172, #0f2846);
             transform: scale(0.96);
             border-color: #2dd4bf;
             color: #fde047;
         }
-        .memory-card.matched {
-            background: #166534;
+        .card.matched {
+            background: #0f3b2c;
             border-color: #facc15;
             cursor: default;
             filter: drop-shadow(0 0 6px #2dd4bf);
-            opacity: 0.85;
+            opacity: 0.9;
         }
-        .game-stats-bar {
+
+        .stats-row {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             background: #0a1022cc;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 60px;
             font-size: 0.85rem;
             font-weight: 500;
             color: #cbd5e6;
-            margin-top: 14px;
+            margin-top: 16px;
             backdrop-filter: blur(4px);
         }
-        .reset-game-btn {
+        .reset-btn {
             background: #2d3b57;
             border: none;
             padding: 6px 20px;
-            border-radius: 30px;
+            border-radius: 40px;
             color: white;
             font-weight: 600;
             font-size: 0.75rem;
             cursor: pointer;
             transition: 0.1s;
-            letter-spacing: 0.3px;
         }
-        .reset-game-btn:active {
-            transform: scale(0.94);
+        .reset-btn:active {
+            transform: scale(0.95);
         }
-        .info-message {
+        .footnote {
             font-size: 0.7rem;
             color: #5f7fae;
-            margin-top: 18px;
+            margin-top: 20px;
         }
-        .toast-notify {
+        .toast-msg {
             background: #10b981dd;
-            color: #0a2c1c;
+            color: #052e1a;
             font-weight: bold;
             padding: 6px 18px;
-            border-radius: 50px;
+            border-radius: 40px;
             font-size: 0.75rem;
             margin-top: 12px;
             display: inline-block;
             backdrop-filter: blur(8px);
         }
 
-        @keyframes popWin {
-            0% { opacity: 0; transform: scale(0.2) rotate(-10deg);}
-            70% { transform: scale(1.08);}
+        @keyframes pulseWin {
+            0% { opacity: 0; transform: scale(0.3) rotate(-5deg);}
+            60% { transform: scale(1.08);}
             100% { opacity: 1; transform: scale(1) rotate(0deg);}
         }
-        .animate-check {
-            animation: popWin 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+        .animate-success-svg {
+            animation: pulseWin 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+        }
+
+        @media (max-width: 550px) {
+            .offline-hub {
+                padding: 22px 16px 34px;
+                border-radius: 48px;
+            }
+            .memory-grid {
+                gap: 10px;
+            }
+            .card {
+                font-size: 1.6rem;
+                border-radius: 20px;
+            }
+            h2 {
+                font-size: 1.6rem;
+            }
+            .retry-button {
+                width: 90%;
+            }
+            .offline-art {
+                width: 150px;
+                height: 130px;
+            }
+        }
+        @media (max-width: 450px) {
+            .memory-grid {
+                gap: 8px;
+            }
+            .card {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="offline-panel" id="appContainer">
-    <!-- concentric rings canvas loader -->
-    <div class="ring-loader">
-        <canvas id="ringLayer1" width="140" height="140" class="ring-canvas"></canvas>
-        <canvas id="ringLayer2" width="140" height="140" class="ring-canvas"></canvas>
-        <canvas id="ringLayer3" width="140" height="140" class="ring-canvas"></canvas>
+<div class="offline-hub" id="appRoot">
+    <!-- OFFLINE ILLUSTRATION: faithfully recreated from the "no internet" JSON -->
+    <div class="offline-art" id="offlineArt">
+        <svg class="offline-svg" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Wifi arcs with slash (inspired by the JSON no internet) -->
+            <path d="M140 160 C 105 160, 75 142, 55 118" stroke="#64748b" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="6 8"/>
+            <path d="M140 135 C 115 135, 93 122, 78 103" stroke="#64748b" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M140 112 C 124 112, 110 101, 100 88" stroke="#64748b" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <!-- Exclamation circle (broken connection) -->
+            <circle cx="140" cy="182" r="10" fill="#f97316"/>
+            <rect x="138" y="152" width="4" height="20" rx="2" fill="#f97316"/>
+            <!-- Slash mark -->
+            <line x1="60" y1="60" x2="220" y2="170" stroke="#ef4444" stroke-width="6" stroke-linecap="round"/>
+            <!-- Antenna / satellite elements from the JSON style -->
+            <path d="M180 68 L205 92" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+            <path d="M230 68 L205 92" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="205" cy="92" r="16" fill="none" stroke="#ef4444" stroke-width="5"/>
+            <text x="198" y="99" font-size="16" fill="#ef4444" font-weight="bold">!</text>
+            <!-- rotating dashed rings (from the JSON's rotating groups) -->
+            <circle cx="140" cy="75" r="32" stroke="#a855f7" stroke-width="3" stroke-dasharray="8 10" fill="none" opacity="0.7">
+                <animateTransform attributeName="transform" type="rotate" from="0 140 75" to="360 140 75" dur="6s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="140" cy="75" r="48" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="6 12" fill="none" opacity="0.5">
+                <animateTransform attributeName="transform" type="rotate" from="360 140 75" to="0 140 75" dur="8s" repeatCount="indefinite"/>
+            </circle>
+        </svg>
     </div>
 
-    <div class="status-chip">
-        <div class="status-led" id="ledDot"></div>
-        <span class="status-text" id="statusMessageText">🌐 scanning network...</span>
+    <div class="status-pill">
+        <div class="led" id="ledStatus"></div>
+        <span class="status-label" id="statusText">🔍 scanning network...</span>
     </div>
 
-    <h2 id="mainHeading">Connection Lost</h2>
-    <p class="sub-desc" id="descriptionText">Auto-recovery active · Play the shape game while waiting</p>
+    <h2 id="mainTitle">No Internet Connection</h2>
+    <p class="sub" id="descMsg">Auto-recovery active · play game while offline</p>
 
-    <div class="success-stage" id="successAnimationZone"></div>
+    <div class="success-stage" id="successAnimationArea"></div>
 
-    <button class="retry-button" id="forceRetryBtn">⟳ Check connection now</button>
+    <button class="retry-button" id="manualRetryBtn">⟳ Check Connection Now</button>
 
-    <!-- Memory game without emojis: abstract shape icons (geometric & symbols) -->
+    <!-- Game zone: NO EMOJIS, only geometric shape set -->
     <div class="game-divider">
         <div class="game-header">
-            <span>✦ MEMORY MATCH ✦</span>
+            <span>◈ SHAPE MEMORY ◈</span>
         </div>
-        <div class="memory-grid" id="gameGridContainer"></div>
-        <div class="game-stats-bar">
-            <span>🏆 PAIRS: <span id="pairedCount">0</span> / <span id="totalPairsCount">8</span></span>
-            <span>🖱️ MOVES: <span id="totalMoves">0</span></span>
-            <button class="reset-game-btn" id="restartGameBtn">🔄 NEW GAME</button>
+        <div class="memory-grid" id="gameBoard"></div>
+        <div class="stats-row">
+            <span>🏆 PAIRS: <span id="matchedCount">0</span> / <span id="totalPairsSpan">8</span></span>
+            <span>🔄 MOVES: <span id="movesCount">0</span></span>
+            <button class="reset-btn" id="resetGameBtn">⟳ New Game</button>
         </div>
-        <div class="info-message">
-            ⚡ Offline fun | Geometric shapes & symbols — match each pair
+        <div class="footnote">
+            ✦ geometric symbols · match each pair ✦
         </div>
+        <div id="toastContainer" style="margin-top: 12px;"></div>
     </div>
-    <div id="gameToastMsg" style="margin-top: 10px;"></div>
 </div>
 
 <script>
-    (function() {
-        // ---------- 1. ANIMATED RINGS (Inspired by loading JSON) ----------
-        const canvasRing1 = document.getElementById('ringLayer1');
-        const canvasRing2 = document.getElementById('ringLayer2');
-        const canvasRing3 = document.getElementById('ringLayer3');
-        let ringAnimationId = null;
-        let ringsActive = true;
+    (function(){
+        // --------------------------------------------------------------
+        // 1. NETWORK STATE + AUTO REDIRECT + SUCCESS ANIMATION (JSON style)
+        // --------------------------------------------------------------
+        let redirectTriggered = false;
+        let autoInterval = null;
 
-        function drawStyledRing(ctx, cx, cy, radius, lineWidth, colorStops, alpha, dash = false) {
-            ctx.clearRect(0, 0, 140, 140);
-            ctx.save();
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.lineWidth = lineWidth;
-            const gradient = ctx.createLinearGradient(20, 20, 120, 120);
-            gradient.addColorStop(0, colorStops[0]);
-            gradient.addColorStop(1, colorStops[1]);
-            ctx.strokeStyle = gradient;
-            ctx.stroke();
-            if (dash) {
-                ctx.beginPath();
-                ctx.setLineDash([5, 10]);
-                ctx.arc(cx, cy, radius - 1.5, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-            ctx.restore();
+        const ledEl = document.getElementById('ledStatus');
+        const statusTextEl = document.getElementById('statusText');
+        const mainTitleEl = document.getElementById('mainTitle');
+        const descMsgEl = document.getElementById('descMsg');
+        const offlineArt = document.getElementById('offlineArt');
+
+        function setOfflineUI() {
+            ledEl.classList.remove('success');
+            ledEl.style.background = "#f97316";
+            statusTextEl.innerText = "📡 Offline · auto-reload";
+            mainTitleEl.innerText = "No Internet Connection";
+            descMsgEl.innerText = "Auto-retry every 7 seconds · enjoy the game";
+            if(offlineArt) offlineArt.style.opacity = "1";
         }
 
-        function animateRings() {
-            if (!ringsActive) return;
-            const time = performance.now() * 0.0045;
-            const center = 70;
-            // Ring 1 (inner)
-            const ctx1 = canvasRing1.getContext('2d');
-            const scale1 = 0.62 + Math.sin(time * 1.5) * 0.07;
-            const radius1 = 28 * scale1;
-            const op1 = 0.65 + Math.sin(time * 2.1) * 0.3;
-            drawStyledRing(ctx1, center, center, radius1, 4.2, ['#3b82f6', '#a855f7'], op1, false);
-            
-            // Ring 2 (mid)
-            const ctx2 = canvasRing2.getContext('2d');
-            const scale2 = 0.76 + Math.sin(time * 1.2) * 0.06;
-            const radius2 = 44 * scale2;
-            const op2 = 0.7 + Math.sin(time * 1.7) * 0.28;
-            drawStyledRing(ctx2, center, center, radius2, 4.8, ['#f59e0b', '#ec4899'], op2, true);
-            
-            // Ring 3 (outer)
-            const ctx3 = canvasRing3.getContext('2d');
-            const scale3 = 0.91 + Math.sin(time * 0.9) * 0.045;
-            const radius3 = 60 * scale3;
-            const op3 = 0.72 + Math.sin(time * 1.3) * 0.25;
-            drawStyledRing(ctx3, center, center, radius3, 5.2, ['#10b981', '#3b82f6'], op3, false);
-            
-            ringAnimationId = requestAnimationFrame(animateRings);
-        }
-        
-        function startRingLoader() {
-            if (ringAnimationId) cancelAnimationFrame(ringAnimationId);
-            ringsActive = true;
-            animateRings();
-        }
-        
-        function stopRingLoader() {
-            ringsActive = false;
-            if (ringAnimationId) {
-                cancelAnimationFrame(ringAnimationId);
-                ringAnimationId = null;
-            }
-            [canvasRing1, canvasRing2, canvasRing3].forEach(canvas => {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, 140, 140);
-            });
-        }
-        
-        // ---------- 2. CHECKMARK SUCCESS ANIMATION (SVG) ----------
-        function renderSuccessCheckmark() {
-            const zone = document.getElementById('successAnimationZone');
-            zone.innerHTML = `
-                <svg class="check-svg animate-check" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="60" cy="60" r="52" fill="#10b981" stroke="#ffffff" stroke-width="3.5" stroke-dasharray="330" stroke-dashoffset="0">
-                        <animate attributeName="stroke-dashoffset" from="330" to="0" dur="0.4s" begin="0s" fill="freeze"/>
+        // SUCCESS ANIMATION: faithful recreation from the provided "success" JSON (circle + check + spark repeater)
+        function renderSuccessAnimation() {
+            const container = document.getElementById('successAnimationArea');
+            container.innerHTML = `
+                <svg class="success-svg animate-success-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- rotating circle stroke with trim (inspired by JSON circle layer) -->
+                    <circle cx="60" cy="60" r="52" stroke="#10b981" stroke-width="5" stroke-dasharray="330" stroke-dashoffset="0">
+                        <animate attributeName="stroke-dashoffset" from="330" to="0" dur="0.45s" begin="0s" fill="freeze"/>
                     </circle>
-                    <path d="M36 61 L52 77 L86 43" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-dasharray="100" stroke-dashoffset="100">
-                        <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.35s" begin="0.18s" fill="freeze"/>
+                    <!-- check mark path from JSON -->
+                    <path d="M38 58 L53 74 L84 44" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-dasharray="100" stroke-dashoffset="100">
+                        <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.4s" begin="0.2s" fill="freeze"/>
                     </path>
-                    <circle cx="60" cy="60" r="56" fill="none" stroke="#bef264" stroke-width="2.2">
-                        <animate attributeName="r" from="56" to="64" dur="0.6s" repeatCount="2"/>
-                    </circle>
+                    <!-- spark repeater effect (8 rectangles rotating, like the JSON spark group) -->
+                    <g transform="translate(60,60)">
+                        <g>
+                            <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.2s" repeatCount="2" begin="0.3s"/>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#facc15" stroke-width="3" stroke-linecap="round">
+                                <animate attributeName="y2" values="-48;-52;-48" dur="0.6s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" transform="rotate(45)">
+                                <animate attributeName="y2" values="-48;-52;-48" dur="0.5s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" transform="rotate(90)">
+                                <animate attributeName="y2" values="-48;-51;-48" dur="0.7s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round" transform="rotate(135)">
+                                <animate attributeName="y2" values="-48;-52;-48" dur="0.55s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" transform="rotate(180)">
+                                <animate attributeName="y2" values="-48;-51;-48" dur="0.65s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" transform="rotate(225)">
+                                <animate attributeName="y2" values="-48;-52;-48" dur="0.6s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" transform="rotate(270)">
+                                <animate attributeName="y2" values="-48;-50;-48" dur="0.5s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="0" y1="-35" x2="0" y2="-48" stroke="#f472b6" stroke-width="2.5" stroke-linecap="round" transform="rotate(315)">
+                                <animate attributeName="y2" values="-48;-52;-48" dur="0.7s" repeatCount="indefinite"/>
+                            </line>
+                        </g>
+                    </g>
                 </svg>
             `;
         }
-        
-        function clearSuccessIcon() {
-            const zone = document.getElementById('successAnimationZone');
-            zone.innerHTML = '';
+
+        function clearSuccessAnimation() {
+            const container = document.getElementById('successAnimationArea');
+            container.innerHTML = '';
         }
-        
-        // ---------- 3. NETWORK & AUTO-RECOVERY (Auto reload + main site) ----------
-        let wasOnline = navigator.onLine;
-        let redirectTriggered = false;
-        let autoCheckInterval = null;
-        
-        const ledDot = document.getElementById('ledDot');
-        const statusMsgSpan = document.getElementById('statusMessageText');
-        const mainHeading = document.getElementById('mainHeading');
-        const subDesc = document.getElementById('descriptionText');
-        
-        function applyOfflineUI() {
-            ledDot.classList.remove('online');
-            ledDot.style.background = "#f97316";
-            statusMsgSpan.innerText = "⚠️ Offline · auto-reload active";
-            mainHeading.innerText = "No Internet Connection";
-            subDesc.innerText = "Retrying every 7 seconds. Play the game until we reconnect!";
-            clearSuccessIcon();
-            stopRingLoader();
-            startRingLoader();
-        }
-        
-        function handleConnectionRestored() {
-            if (redirectTriggered) return;
+
+        function triggerOnlineAndRedirect() {
+            if(redirectTriggered) return;
             redirectTriggered = true;
-            stopRingLoader();
-            ledDot.classList.add('online');
-            ledDot.style.background = "#10b981";
-            statusMsgSpan.innerText = "✅ CONNECTED! Redirecting to main site...";
-            mainHeading.innerText = "Back Online!";
-            subDesc.innerText = "Network restored. Opening the main page.";
-            renderSuccessCheckmark();
-            
-            if (autoCheckInterval) {
-                clearInterval(autoCheckInterval);
-                autoCheckInterval = null;
+            ledEl.classList.add('success');
+            ledEl.style.background = "#10b981";
+            statusTextEl.innerText = "✅ Connected! Redirecting...";
+            mainTitleEl.innerText = "Back Online!";
+            descMsgEl.innerText = "Connection restored. Opening main site.";
+            renderSuccessAnimation();
+            if(autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
             }
-            // small delay for success visibility then redirect to main site (current origin)
+            if(offlineArt) offlineArt.style.opacity = "0.15";
             setTimeout(() => {
-                // use '/' to reload main site / index. If you need specific main domain, use '/'
                 window.location.href = '/';
-                // fallback if stuck
                 setTimeout(() => {
-                    if (!redirectTriggered) window.location.reload();
+                    if(!redirectTriggered) window.location.reload();
                 }, 800);
-            }, 1100);
+            }, 1300);
         }
-        
+
         function performNetworkPing() {
-            if (redirectTriggered) return;
-            // silent fetch to test connectivity (lightweight)
+            if(redirectTriggered) return;
             fetch('/favicon.ico', { method: 'HEAD', cache: 'no-store', mode: 'no-cors' })
                 .then(() => {
-                    if (navigator.onLine && !redirectTriggered) {
-                        handleConnectionRestored();
-                    }
+                    if(navigator.onLine && !redirectTriggered) triggerOnlineAndRedirect();
                 })
                 .catch(() => {
-                    if (!navigator.onLine) return;
-                    if (!redirectTriggered && navigator.onLine) handleConnectionRestored();
+                    if(navigator.onLine && !redirectTriggered) triggerOnlineAndRedirect();
                 });
         }
-        
+
         function startAutoReloader() {
-            if (autoCheckInterval) clearInterval(autoCheckInterval);
-            autoCheckInterval = setInterval(() => {
-                if (redirectTriggered) return;
-                if (navigator.onLine) {
-                    if (!redirectTriggered) handleConnectionRestored();
+            if(autoInterval) clearInterval(autoInterval);
+            autoInterval = setInterval(() => {
+                if(redirectTriggered) return;
+                if(navigator.onLine) {
+                    if(!redirectTriggered) triggerOnlineAndRedirect();
                 } else {
-                    statusMsgSpan.innerText = "🔄 Auto-reloading network check...";
-                    fetch('/favicon.ico', { method: 'HEAD', cache: 'no-store', mode: 'no-cors' })
-                        .catch(() => {});
+                    statusTextEl.innerText = "⟳ auto-retry...";
+                    performNetworkPing();
                 }
             }, 7000);
         }
-        
+
         function manualRetry() {
-            if (redirectTriggered) return;
-            statusMsgSpan.innerText = "⟳ Manual retry...";
+            if(redirectTriggered) return;
+            statusTextEl.innerText = "⟳ manual check...";
             fetch('/favicon.ico', { method: 'HEAD', cache: 'no-store' })
                 .then(() => {
-                    if (navigator.onLine && !redirectTriggered) handleConnectionRestored();
-                    else if (!navigator.onLine) statusMsgSpan.innerText = "❌ Still offline. Keep playing!";
+                    if(navigator.onLine && !redirectTriggered) triggerOnlineAndRedirect();
+                    else if(!navigator.onLine) statusTextEl.innerText = "❌ still offline";
                 })
                 .catch(() => {
-                    if (navigator.onLine && !redirectTriggered) handleConnectionRestored();
-                    else statusMsgSpan.innerText = "Offline mode active";
+                    if(navigator.onLine && !redirectTriggered) triggerOnlineAndRedirect();
+                    else statusTextEl.innerText = "offline mode";
                 });
         }
-        
+
         function initNetworkHandlers() {
-            if (navigator.onLine && !redirectTriggered) {
-                // small delay to ensure ui ready before redirect
+            if(navigator.onLine && !redirectTriggered) {
                 setTimeout(() => {
-                    if (navigator.onLine && !redirectTriggered) handleConnectionRestored();
+                    if(navigator.onLine && !redirectTriggered) triggerOnlineAndRedirect();
                 }, 300);
             } else {
-                applyOfflineUI();
+                setOfflineUI();
                 startAutoReloader();
             }
-            window.addEventListener('online', () => {
-                if (!redirectTriggered) handleConnectionRestored();
-            });
+            window.addEventListener('online', () => { if(!redirectTriggered) triggerOnlineAndRedirect(); });
             window.addEventListener('offline', () => {
-                if (!redirectTriggered) {
+                if(!redirectTriggered) {
                     redirectTriggered = false;
-                    applyOfflineUI();
+                    setOfflineUI();
                     startAutoReloader();
+                    clearSuccessAnimation();
                 }
             });
-            document.getElementById('forceRetryBtn').addEventListener('click', manualRetry);
+            document.getElementById('manualRetryBtn').addEventListener('click', manualRetry);
         }
-        
-        // ---------- 4. MEMORY GAME (NO EMOJIS: abstract shape set: ✦ ◆ ◇ ● ○ ■ □ ▲ △) ----------
-        // We use 8 unique icon-like symbols / geometric shapes
-        const shapeSet = [
-            "✦", "⬟", "◈", "⬤", "▣", "▧", "⬚", "⨀"
-        ];  // 8 pairs => 16 cards
-        
+
+        // --------------------------------------------------------------
+        // 2. MEMORY GAME (NO EMOJIS - only abstract shape symbols)
+        // --------------------------------------------------------------
+        const shapeSymbols = ["⬟", "◈", "⨀", "⬚", "▣", "▧", "✧", "◉"]; // 8 unique geometric pairs
         let gameDeck = [];
-        let flippedCards = [];      // store indices
-        let matchedIndices = new Set();
+        let flippedIndices = [];
+        let matchedSet = new Set();
         let currentMoves = 0;
         let matchedPairs = 0;
-        let lockGame = false;
-        const totalPairsCount = shapeSet.length;
-        
-        const gridContainer = document.getElementById('gameGridContainer');
-        const pairedSpan = document.getElementById('pairedCount');
-        const movesSpan = document.getElementById('totalMoves');
-        const totalPairsSpan = document.getElementById('totalPairsCount');
-        
-        totalPairsSpan.innerText = totalPairsCount;
-        
+        let gameLock = false;
+        const totalPairsCount = shapeSymbols.length;
+
+        const boardContainer = document.getElementById('gameBoard');
+        const matchedSpan = document.getElementById('matchedCount');
+        const movesSpan = document.getElementById('movesCount');
+        const totalPairsSpanEl = document.getElementById('totalPairsSpan');
+        totalPairsSpanEl.innerText = totalPairsCount;
+
         function shuffleArray(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
+            for(let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
             }
             return arr;
         }
-        
+
         function initGame() {
-            let cards = [...shapeSet, ...shapeSet];
+            let cards = [...shapeSymbols, ...shapeSymbols];
             gameDeck = shuffleArray(cards);
-            flippedCards = [];
-            matchedIndices.clear();
+            flippedIndices = [];
+            matchedSet.clear();
             currentMoves = 0;
             matchedPairs = 0;
-            lockGame = false;
-            updateGameStats();
-            renderGameBoard();
+            gameLock = false;
+            updateStats();
+            renderBoard();
         }
-        
-        function updateGameStats() {
-            pairedSpan.innerText = matchedPairs;
+
+        function updateStats() {
+            matchedSpan.innerText = matchedPairs;
             movesSpan.innerText = currentMoves;
         }
-        
-        function renderGameBoard() {
-            gridContainer.innerHTML = '';
+
+        function renderBoard() {
+            boardContainer.innerHTML = '';
             gameDeck.forEach((symbol, idx) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.classList.add('memory-card');
-                if (matchedIndices.has(idx)) {
-                    cardDiv.classList.add('matched');
-                    cardDiv.innerText = symbol;
-                } else if (flippedCards.includes(idx)) {
-                    cardDiv.classList.add('flipped');
-                    cardDiv.innerText = symbol;
+                const card = document.createElement('div');
+                card.classList.add('card');
+                if(matchedSet.has(idx)) {
+                    card.classList.add('matched');
+                    card.innerText = symbol;
+                } else if(flippedIndices.includes(idx)) {
+                    card.classList.add('flipped');
+                    card.innerText = symbol;
                 } else {
-                    cardDiv.innerText = "?";
+                    card.innerText = "?";
                 }
-                cardDiv.addEventListener('click', (e) => {
+                card.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (lockGame) return;
-                    if (matchedIndices.has(idx)) return;
-                    if (flippedCards.includes(idx)) return;
-                    if (flippedCards.length === 2) return;
+                    if(gameLock) return;
+                    if(matchedSet.has(idx)) return;
+                    if(flippedIndices.includes(idx)) return;
+                    if(flippedIndices.length === 2) return;
                     
-                    flippedCards.push(idx);
-                    renderGameBoard();
+                    flippedIndices.push(idx);
+                    renderBoard();
                     
-                    if (flippedCards.length === 2) {
+                    if(flippedIndices.length === 2) {
                         currentMoves++;
-                        updateGameStats();
-                        const [idxA, idxB] = flippedCards;
-                        if (gameDeck[idxA] === gameDeck[idxB]) {
-                            // match success
-                            matchedIndices.add(idxA);
-                            matchedIndices.add(idxB);
+                        updateStats();
+                        const [idxA, idxB] = flippedIndices;
+                        if(gameDeck[idxA] === gameDeck[idxB]) {
+                            matchedSet.add(idxA);
+                            matchedSet.add(idxB);
                             matchedPairs++;
-                            updateGameStats();
-                            flippedCards = [];
-                            renderGameBoard();
-                            if (matchedPairs === totalPairsCount) {
-                                const toastDiv = document.getElementById('gameToastMsg');
-                                toastDiv.innerHTML = '<div class="toast-notify">🎉 VICTORY! Game completed 🎉</div>';
+                            updateStats();
+                            flippedIndices = [];
+                            renderBoard();
+                            if(matchedPairs === totalPairsCount) {
+                                const toastDiv = document.getElementById('toastContainer');
+                                toastDiv.innerHTML = '<div class="toast-msg">✦ PERFECT! Game completed ✦</div>';
                                 setTimeout(() => toastDiv.innerHTML = '', 2800);
                             }
                         } else {
-                            lockGame = true;
+                            gameLock = true;
                             setTimeout(() => {
-                                flippedCards = [];
-                                lockGame = false;
-                                renderGameBoard();
-                            }, 780);
+                                flippedIndices = [];
+                                gameLock = false;
+                                renderBoard();
+                            }, 750);
                         }
                     }
                 });
-                gridContainer.appendChild(cardDiv);
+                boardContainer.appendChild(card);
             });
         }
-        
-        document.getElementById('restartGameBtn').addEventListener('click', () => {
+
+        document.getElementById('resetGameBtn').addEventListener('click', () => {
             initGame();
-            const toastMsgDiv = document.getElementById('gameToastMsg');
-            toastMsgDiv.innerHTML = '<div class="toast-notify">🔄 New game — match all geometric pairs!</div>';
-            setTimeout(() => toastMsgDiv.innerHTML = '', 1800);
+            const toastDiv = document.getElementById('toastContainer');
+            toastDiv.innerHTML = '<div class="toast-msg">🔄 New game · match all shapes</div>';
+            setTimeout(() => toastDiv.innerHTML = '', 1800);
         });
-        
-        // ---------- 5. BOOTSTRAP ----------
+
+        // --------------------------------------------------------------
+        // 3. BOOTSTRAP
+        // --------------------------------------------------------------
         function bootstrap() {
-            startRingLoader();
             initGame();
             initNetworkHandlers();
         }
